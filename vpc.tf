@@ -73,6 +73,19 @@ resource "aws_subnet" "database" { # first name is public[0], second name is pub
   )
 }
 
+resource "aws_db_subnet_group" "default" {
+  name       = "${local.resource_name}"
+  subnet_ids = aws_subnet.database[*].id
+
+  tags = merge(
+    var.common_tags,
+    var.database_subnet_group_tags,
+    {
+        Name = "${local.resource_name}"
+    }
+  )
+}
+
 resource "aws_eip" "nat" {
   domain   = "vpc"
 }
@@ -151,7 +164,7 @@ resource "aws_route" "database_route_nat" {
   destination_cidr_block    = "0.0.0.0/0"
   nat_gateway_id = aws_nat_gateway.nat.id
 }
-####vvvvv#######
+
 #### Route table and subnet associations ####
 resource "aws_route_table_association" "public" {
   count = length(var.public_subnet_cidrs)
